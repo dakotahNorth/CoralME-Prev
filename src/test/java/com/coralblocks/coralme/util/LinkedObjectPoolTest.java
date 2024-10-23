@@ -2,6 +2,8 @@ package com.coralblocks.coralme.util;
 
 import org.junit.Assert;
 import org.junit.Test;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LinkedObjectPoolTest {
 
@@ -82,25 +84,19 @@ public class LinkedObjectPoolTest {
         Assert.assertEquals(1, pool.size());
 
         StringBuilder sb1 = pool.get();
-        StringBuilder sb2 = pool.get();
-
-        Assert.assertTrue("Pool size should be between 0", pool.size() == 1);
-
-        Assert.assertTrue("sb1 should be in the original list", list.contains(sb1));
-        Assert.assertTrue("sb2 should be in the original list", list.contains(sb2));
-
-        StringBuilder sb3 = pool.get();
-        Assert.assertTrue("sb3 should be in the original list", list.contains(sb3));
-     
         Assert.assertNotNull(sb1);
         Assert.assertEquals(0, pool.size());
+
+        StringBuilder sb2 = pool.get();
+        Assert.assertNotNull(sb2);
+        Assert.assertTrue("Pool size should be 0", pool.size() == 0);
 
         pool.release(sb1);
         Assert.assertEquals(1, pool.size());
 
-        StringBuilder sb2 = pool.get();
-        Assert.assertNotNull(sb2);
-        Assert.assertSame("Should reuse released instance", sb1, sb2);
+        StringBuilder sb3 = pool.get();
+        Assert.assertNotNull(sb3);
+        Assert.assertSame("Should reuse released instance", sb1, sb3);
         Assert.assertEquals(0, pool.size());
     }
 }
