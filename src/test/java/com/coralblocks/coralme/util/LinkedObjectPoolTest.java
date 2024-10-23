@@ -11,6 +11,57 @@ public class LinkedObjectPoolTest {
 
     @Test
     public void testAdaptiveGrowthUnderMemoryPressure() {
+        LinkedObjectPool<byte[]> pool = new LinkedObjectPool<>(2, () -> new byte[1024 * 1024]); // 1MB objects
+        List<byte[]> objects = new ArrayList<>();
+
+        int maxObjects = 100; // Limit the number of objects to prevent actual OutOfMemoryError
+        int createdObjects = 0;
+
+        try {
+            for (int i = 0; i < maxObjects; i++) {
+                byte[] object = pool.get();
+                if (object == null) {
+                    // If get() returns null, it means memory is not available to create new instances
+                    break;
+                }
+                objects.add(object);
+                createdObjects++;
+            }
+        } catch (OutOfMemoryError e) {
+            Assert.fail("Unexpected OutOfMemoryError: " + e.getMessage());
+        }
+
+        Assert.assertTrue("Pool should have created multiple objects", createdObjects > 2);
+        Assert.assertTrue("Pool should have stopped creating objects before reaching maxObjects", createdObjects < maxObjects);
+
+        // Release objects back to the pool
+        for (byte[] obj : objects) {
+            pool.release(obj);
+        }
+
+        // Verify that the pool size is limited by available memory
+        Assert.assertTrue("Pool size should be limited by available memory", pool.size() <= objects.size());
+        Assert.assertTrue("Pool size should be greater than initial size", pool.size() > 2);
+
+        // Verify that we can still get objects from the pool
+        byte[] newObject = pool.get();
+        Assert.assertNotNull("Should be able to get an object from the pool", newObject);
+    }
+
+    // ... (keep other existing test methods)
+}
+
+import org.junit.Assert;
+import org.junit.Test;
+import java.util.ArrayList;
+import java.util.List;
+
+public class LinkedObjectPoolTest {
+
+    // ... (keep existing test methods)
+
+    @Test
+    public void testAdaptiveGrowthUnderMemoryPressure() {
         LinkedObjectPool<byte[]> pool =
                 new LinkedObjectPool<>(2, () -> new byte[1024]); // 1MB objects
         List<byte[]> objects = new ArrayList<>();
