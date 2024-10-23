@@ -2,16 +2,16 @@ package com.coralblocks.coralme.util;
 
 import org.junit.Assert;
 import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class LinkedObjectPoolTest {
 
-    // ... (keep existing test methods)
-
     @Test
     public void testAdaptiveGrowthUnderMemoryPressure() {
-        LinkedObjectPool<byte[]> pool = new LinkedObjectPool<>(2, () -> new byte[1024]); // 1KB objects
+        LinkedObjectPool<byte[]> pool =
+                new LinkedObjectPool<>(2, () -> new byte[1024]); // 1KB objects
         List<byte[]> objects = new ArrayList<>();
 
         int totalObjects = 0;
@@ -45,56 +45,12 @@ public class LinkedObjectPoolTest {
                 "Pool size should be limited by available memory", pool.size() <= totalObjects);
 
         // Add a debug statement to check the final pool size
-        System.out.println("Final pool size: " + pool.size() + ", Total objects created: " + totalObjects);
+        System.out.println(
+                "Final pool size: " + pool.size() + ", Total objects created: " + totalObjects);
 
         // Verify that we can still get objects from the pool
         byte[] newObject = pool.get();
         Assert.assertNotNull("Should be able to get an object from the pool", newObject);
-    }
-
-    // ... (keep other existing test methods)
-}
-
-import org.junit.Assert;
-import org.junit.Test;
-import java.util.ArrayList;
-import java.util.List;
-
-public class LinkedObjectPoolTest {
-
-    // ... (keep existing test methods)
-
-    @Test
-    public void testAdaptiveGrowthUnderMemoryPressure() {
-        LinkedObjectPool<byte[]> pool =
-                new LinkedObjectPool<>(2, () -> new byte[1024]); // 1MB objects
-        List<byte[]> objects = new ArrayList<>();
-
-        try {
-            byte[] object = pool.get();
-            while (object != null) {
-                objects.add(object);
-                object = pool.get();
-            }
-        } catch (OutOfMemoryError e) {
-            Assert.fail("Unexpected OutOfMemoryError");
-            // Expected behavior when memory is exhausted
-        }
-
-        Assert.assertTrue(
-                "Pool should have created multiple objects before running out of memory",
-                objects.size() > 2);
-        Assert.assertEquals("Pool size should be zero after exhausting memory", 0, pool.size());
-
-        // Release objects back to the pool
-        for (byte[] obj : objects) {
-            pool.release(obj);
-        }
-
-        // The pool size should be less than or equal to the number of objects created
-        // due to memory constraints
-        Assert.assertTrue(
-                "Pool size should be limited by available memory", pool.size() <= objects.size());
     }
 
     @Test
