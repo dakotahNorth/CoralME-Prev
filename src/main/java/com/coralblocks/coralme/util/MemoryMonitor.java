@@ -7,34 +7,28 @@ import java.util.function.Consumer;
 
 /**
  * A utility class that monitors memory usage and updates a callback with the current
- * available memory status.
+ * available memory.
  */
 public final class MemoryMonitor {
 
-    private final Consumer<Boolean> callback;
+    private final Consumer<Long> callback;
     private final long frequency;
 
     private final MemoryMXBean memoryMXBean;
-    private final long minMemory;
 
     private Thread monitorThread;
     private volatile boolean running;
 
-
     /**
      * Creates a new MemoryMonitor for the given callback.
      *
-     * @param callback the Consumer<Boolean> to update with memory information
-     * @param percentage the minimum percentage of memory that should be available
+     * @param callback the Consumer<Long> to update with available memory information
      * @param frequency the frequency at which to check memory usage, in milliseconds
      */
-    MemoryMonitor(Consumer<Boolean> callback, double percentage, long frequency) {
+    MemoryMonitor(Consumer<Long> callback, long frequency) {
         this.callback = callback;
         this.memoryMXBean = ManagementFactory.getMemoryMXBean();
         this.frequency = frequency;
-
-        MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
-        this.minMemory = (long)((heapMemoryUsage.getMax() - heapMemoryUsage.getUsed()) * percentage);
     }
 
     /** Starts the memory monitoring thread. */
@@ -43,7 +37,6 @@ public final class MemoryMonitor {
         monitorThread.setDaemon(true);
         monitorThread.start();
         running = true;
-
     }
 
     /** Stops the memory monitoring thread. */
@@ -53,12 +46,10 @@ public final class MemoryMonitor {
     }
 
     private void monitorMemory() {
-
         while (running && !Thread.currentThread().isInterrupted()) {
-
             MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
             long availableMemory = heapMemoryUsage.getMax() - heapMemoryUsage.getUsed();
-            callback.accept(availableMemory > minMemory);
+            callback.accept(availableMemory);
 
             try {
                 Thread.sleep(frequency);
