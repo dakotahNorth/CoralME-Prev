@@ -51,7 +51,7 @@ public final class LinkedObjectPool<E> implements ObjectPool<E> {
             queue.addLast(supplier.get());
         }
 
-        memoryMonitor = new MemoryMonitor(this::updateIsMemoryAvailable, 0.05, 1000); // 5 percent
+        memoryMonitor = new MemoryMonitor(this::updateAvailableMemory, 1000); // Check every 1 second
         memoryMonitor.start();
     }
 
@@ -94,20 +94,18 @@ public final class LinkedObjectPool<E> implements ObjectPool<E> {
      */
     @Override
     public final void release(E e) {
-
         queue.addLast(e);
 
         // If memory is not available, the object is discarded and left for garbage collection
     }
 
-
     /**
      * Updates the available memory. This method is called by the MemoryMonitor.
      *
-     * @param isMemoryAvailable the current available memory
+     * @param availableMemory the current available memory in bytes
      */
-    private void updateIsMemoryAvailable(boolean isMemoryAvailable) {
-         this.isMemoryAvailable = isMemoryAvailable;
+    private void updateAvailableMemory(Long availableMemory) {
+        this.isMemoryAvailable = availableMemory > MEMORY_THRESHOLD * Runtime.getRuntime().maxMemory();
     }
 
     /** Stops the memory monitor thread. Should be called when the pool is no longer needed. */
